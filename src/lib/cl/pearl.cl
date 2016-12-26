@@ -164,8 +164,10 @@ __kernel void init (
 		*found = 0;
 	}
 
-	if(gr_id == 0) return;
-
+	if(gr_id == 0) {
+		printf("ID: %d\n", (int)id);
+		return;
+	}
 	for(i = 0; i < n_trits; i++) {
 		j = id + i*l_size;
 		mid_low[gid + j] = mid_low[j];
