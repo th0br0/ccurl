@@ -164,13 +164,6 @@ __kernel void init (
 		*found = 0;
 	}
 
-	if(gr_id == 0) {
-		printf("ID: %d\n", (int)id);
-		return;
-	}
-	if(id == 0) {
-		printf("GR_ID: %d, GID:%d\n", (int)gr_id, (int)gid);
-	}
 	for(i = 0; i < n_trits; i++) {
 		j = id + i*l_size;
 		mid_low[gid + j] = mid_low[j];
@@ -239,3 +232,12 @@ __kernel void finalize (
 		}
 	}
 }
+/*
+	if(gr_id == 0) {
+		printf("ID: %d\n", (int)id);
+		return;
+	}
+	if(id == 0) {
+		printf("GR_ID: %d, GID:%d\n", (int)gr_id, (int)gid);
+	}
+ */
