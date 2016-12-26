@@ -191,6 +191,10 @@ __kernel void search (
 	__private size_t i, id, gid, gr_id, l_size, n_trits;
 	setup_ids(&id, &gid, &gr_id, &l_size, &n_trits);
 
+	if(gr_id == 0) {
+		printf("ID:%d GR_ID: %d, GID:%d, LS:%d, NT:%d\n",(int)id, (int)gr_id, (int)gid, (int)l_size, (int)n_trits);
+	}
+
 	for(i = 0; i < 16; i++) {
 		if(id == 0) increment(&(mid_low[gid]), &(mid_high[gid]), (HASH_LENGTH/3)*2, HASH_LENGTH);
 
