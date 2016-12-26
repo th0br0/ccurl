@@ -62,6 +62,12 @@ void *pearcl_find(void *data) {
 	trit_t mid_low_ref_copy[STATE_LENGTH];
 	trit_t mid_high_ref_copy[STATE_LENGTH];
 	trit_t mid_low_copy[STATE_LENGTH];
+	trit_t state_low_copy[STATE_LENGTH];
+	trit_t state_high_ref_copy[STATE_LENGTH];
+	trit_t state_low_ref_copy[STATE_LENGTH];
+	trit_t scratchpad_low[STATE_LENGTH];
+	trit_t scratchpad_high[STATE_LENGTH];
+	int i, diff, tdiff, rounds= 0;
 	memcpy(mid_low_ref_copy, thread->states.mid_low, sizeof(trit_t)*STATE_LENGTH);
 	memcpy(mid_high_ref_copy, thread->states.mid_high, sizeof(trit_t)*STATE_LENGTH);
 
@@ -101,17 +107,16 @@ void *pearcl_find(void *data) {
 				pdcl->cl.buffers[thread->index][1], CL_TRUE, 0, 
 				sizeof(trit_t)*STATE_LENGTH, mid_low_copy, 0, NULL, NULL),
 			"E: failed to read mid state low");
-	fprintf(stderr, "Mid Low buffer difference 1: %d\n", memcmp(mid_low_ref_copy,
-				mid_low_copy, sizeof(trit_t)*STATE_LENGTH));
+	if((diff = memcmp(mid_low_ref_copy,mid_low_copy, sizeof(trit_t)*STATE_LENGTH)) != 0)
+		fprintf(stderr, "Mid Low buffer difference 1: %d\n", diff);
 	check_clerror(
 			clEnqueueReadBuffer(pdcl->cl.clcmdq[thread->index],
 				pdcl->cl.buffers[thread->index][1], CL_TRUE, sizeof(trit_t)*STATE_LENGTH, 
 				sizeof(trit_t)*STATE_LENGTH, mid_low_copy, 0, NULL, NULL),
 			"E: failed to read mid state low");
 	pd_increment(mid_low_ref_copy, mid_high_ref_copy, HASH_LENGTH / 3, (HASH_LENGTH / 3) * 2);
-	fprintf(stderr, "Mid Low buffer difference 2: %d\n", memcmp(mid_low_ref_copy,
-				mid_low_copy, sizeof(trit_t)*STATE_LENGTH));
-	int i, diff, rounds= 0;
+	if((diff = memcmp(mid_low_ref_copy,mid_low_copy, sizeof(trit_t)*STATE_LENGTH)) != 0)
+		fprintf(stderr, "Mid Low buffer difference 2: %d\n", diff);
 	while( found == 0 && !pdcl->pd.finished) {
 		rounds++;
 		cl_event ev1;
@@ -128,12 +133,25 @@ void *pearcl_find(void *data) {
 					pdcl->cl.buffers[thread->index][1], CL_TRUE, sizeof(trit_t)*STATE_LENGTH, 
 					sizeof(trit_t)*STATE_LENGTH, mid_low_copy, 0, NULL, NULL),
 				"E: failed to read mid state low");
+		check_clerror(
+				clEnqueueReadBuffer(pdcl->cl.clcmdq[thread->index],
+					pdcl->cl.buffers[thread->index][3], CL_TRUE, sizeof(trit_t)*STATE_LENGTH, 
+					sizeof(trit_t)*STATE_LENGTH, state_low_copy, 0, NULL, NULL),
+				"E: failed to read mid state low");
 		i=0;
 		while(i++ < 16)
 			pd_increment(mid_low_ref_copy, mid_high_ref_copy, 2*(HASH_LENGTH / 3), HASH_LENGTH);
+		memcpy(state_low_ref_copy, mid_low_ref_copy, sizeof(trit_t)*STATE_LENGTH);
+		memcpy(state_high_ref_copy, mid_high_ref_copy, sizeof(trit_t)*STATE_LENGTH);
+		pd_transform(state_low_ref_copy, state_high_ref_copy, scratchpad_low, scratchpad_high);
+
 		diff = memcmp(mid_low_ref_copy, mid_low_copy, sizeof(trit_t)*STATE_LENGTH);
-		if(diff > 0)
-			fprintf(stderr, "Mid Low buffer difference on round %d 2: %d\n", rounds, diff);
+		if(diff != 0)
+			fprintf(stderr, "Mid Low buffer 2 difference on round %d: %d\n", rounds, diff);
+		tdiff = memcmp(state_low_ref_copy, state_low_copy, sizeof(trit_t)*STATE_LENGTH);
+		if(tdiff != 0) {
+			fprintf(stderr, "State Low buffer 2 difference on round %d: %d\n", rounds, tdiff);
+		}
 	} 
 	if(found > 0) {
 		check_clerror(clEnqueueNDRangeKernel(pdcl->cl.clcmdq[thread->index], 
