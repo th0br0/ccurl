@@ -58,8 +58,8 @@ void *pearcl_find(void *data) {
 		(STATE_LENGTH % pdcl->cl.num_multiple[thread->index] == 0 ? 0 : 1));
 	local_work_size += (STATE_LENGTH % pdcl->cl.num_multiple[thread->index] == 0 ? 0 : 1);
 		*/
-	//local_work_size = HASH_LENGTH; 
 	global_work_size = local_work_size * num_groups;
+	trit_t mid_low_copy[STATE_LENGTH];
 
 	for(int i=0; i < thread->index; i++) {
 		global_offset += pdcl->cl.num_cores[i];
@@ -92,6 +92,22 @@ void *pearcl_find(void *data) {
 			clEnqueueReadBuffer(pdcl->cl.clcmdq[thread->index],
 				pdcl->cl.buffers[thread->index][6], CL_TRUE, 0, sizeof(char),
 				&found, 1, &ev, NULL), "E: could not read init errors.\n");
+	check_clerror(
+			clEnqueueReadBuffer(pdcl->cl.clcmdq[thread->index],
+				pdcl->cl.buffers[thread->index][1], CL_TRUE, 0, 
+				sizeof(trit_t)*STATE_LENGTH, mid_low_copy, 0, NULL, NULL),
+			"E: failed to read mid state low");
+	fprintf(stderr, "Mid Low buffer difference 1: %d\n", memcmp(thread->states.mid_low,
+				mid_low_copy, sizeof(trit_t)*STATE_LENGTH));
+	check_clerror(
+			clEnqueueReadBuffer(pdcl->cl.clcmdq[thread->index],
+				pdcl->cl.buffers[thread->index][1], CL_TRUE, sizeof(trit_t)*STATE_LENGTH, 
+				sizeof(trit_t)*STATE_LENGTH, mid_low_copy, 0, NULL, NULL),
+			"E: failed to read mid state low");
+	pd_increment(thread->states.mid_low, thread->states.mid_high, HASH_LENGTH / 3, (HASH_LENGTH / 3) * 2);
+	fprintf(stderr, "Mid Low buffer difference 2: %d\n", memcmp(thread->states.mid_low,
+				mid_low_copy, sizeof(trit_t)*STATE_LENGTH));
+
 	while( found == 0 && !pdcl->pd.finished) {
 		cl_event ev1;
 		check_clerror(clEnqueueNDRangeKernel(pdcl->cl.clcmdq[thread->index], 
