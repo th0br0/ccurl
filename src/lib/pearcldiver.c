@@ -138,19 +138,24 @@ void *pearcl_find(void *data) {
 					pdcl->cl.buffers[thread->index][3], CL_TRUE, sizeof(trit_t)*STATE_LENGTH, 
 					sizeof(trit_t)*STATE_LENGTH, state_low_copy, 0, NULL, NULL),
 				"E: failed to read mid state low");
-		i=0;
-		while(i++ < 16)
-			pd_increment(mid_low_ref_copy, mid_high_ref_copy, 2*(HASH_LENGTH / 3), HASH_LENGTH);
-		memcpy(state_low_ref_copy, mid_low_ref_copy, sizeof(trit_t)*STATE_LENGTH);
-		memcpy(state_high_ref_copy, mid_high_ref_copy, sizeof(trit_t)*STATE_LENGTH);
-		pd_transform(state_low_ref_copy, state_high_ref_copy, scratchpad_low, scratchpad_high);
+		if(rounds == 1) {
+			i=0;
+			while(i++ < 16)
+				pd_increment(mid_low_ref_copy, mid_high_ref_copy, 2*(HASH_LENGTH / 3), HASH_LENGTH);
+			memcpy(state_low_ref_copy, mid_low_ref_copy, sizeof(trit_t)*STATE_LENGTH);
+			memcpy(state_high_ref_copy, mid_high_ref_copy, sizeof(trit_t)*STATE_LENGTH);
+			pd_transform(state_low_ref_copy, state_high_ref_copy, scratchpad_low, scratchpad_high);
 
-		diff = memcmp(mid_low_ref_copy, mid_low_copy, sizeof(trit_t)*STATE_LENGTH);
-		if(diff != 0)
-			fprintf(stderr, "Mid Low buffer 2 difference on round %d: %d\n", rounds, diff);
-		tdiff = memcmp(state_low_ref_copy, state_low_copy, sizeof(trit_t)*STATE_LENGTH);
-		if(tdiff != 0) {
-			fprintf(stderr, "State Low buffer 2 difference on round %d: %d\n", rounds, tdiff);
+			diff = memcmp(mid_low_ref_copy, mid_low_copy, sizeof(trit_t)*STATE_LENGTH);
+			if(diff != 0)
+				fprintf(stderr, "Mid Low buffer 2 difference on round %d: %d\n", rounds, diff);
+			tdiff = memcmp(state_low_ref_copy, state_low_copy, sizeof(trit_t)*STATE_LENGTH);
+			if(tdiff != 0) {
+				fprintf(stderr, "State Low buffer 2 difference on round %d: %d\n", rounds, tdiff);
+			}
+			if(tdiff != 0 || diff != 0) {
+				break;
+			}
 		}
 	} 
 	if(found > 0) {
@@ -243,5 +248,5 @@ bool pearcl_search(
 		pthread_join(tid[k-1], NULL);
 	}
 
-	return pdcl->pd.interrupted;
+	return pdcl->pd.interrupted || !pdcl->pd.nonceFound;
 }
