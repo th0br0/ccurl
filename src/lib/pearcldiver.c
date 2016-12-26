@@ -148,7 +148,7 @@ bool pearcl_search(
 	pdcl->cl.kernel.buffer[7] = (BufferInfo){sizeof(trit_t), CL_MEM_READ_WRITE, 2};           // nonce_probe //
 
 	if(kernel_init_buffers (&(pdcl->cl)) != 0) {
-		//fprintf(stderr, "Could not init kernel buffers. \n");
+		fprintf(stderr, "Could not init kernel buffers. \n");
 		return true;
 	}
 
@@ -193,12 +193,3 @@ bool pearcl_search(
 
 	return pdcl->pd.interrupted;
 }
-/*
- *
-	check_clerror(clEnqueueReadBuffer(pdcl->cl.clcmdq[thread->index],
-				pdcl->cl.buffers[thread->index][1], CL_TRUE,
-				0, sizeof(trit_t)*STATE_LENGTH, mid_low,
-				0, NULL, NULL),
-			"E: reading transaction hash failed.\n");
-	assert(memcmp(thread->states.mid_low, mid_low, STATE_LENGTH*sizeof(trit_t)) == 0);
-	*/
