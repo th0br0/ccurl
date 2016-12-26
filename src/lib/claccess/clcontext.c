@@ -154,7 +154,7 @@ int kernel_init_buffers (CLContext *ctx) {
 			}
 			maxmemsize += memsize;
 			if(maxmemsize >= ctx->max_memory[i]) {
-				fprintf(stderr, " You too much has memories! \n");
+				fprintf(stderr, "E: not enough memory! \n");
 				return 1;
 			}
 

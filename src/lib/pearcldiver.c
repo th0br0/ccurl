@@ -64,6 +64,8 @@ void *pearcl_find(void *data) {
 	for(int i=0; i < thread->index; i++) {
 		global_offset += pdcl->cl.num_cores[i];
 	}
+	fprintf(stderr, "I: Cores:%u, WG Size:%zu\n", pdcl->cl.num_cores[thread->index], 
+			pdcl->cl.num_multiple[thread->index]);
 	check_clerror(
 			clEnqueueWriteBuffer(pdcl->cl.clcmdq[thread->index],
 				pdcl->cl.buffers[thread->index][1], CL_TRUE, 0, 
